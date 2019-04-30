@@ -1,0 +1,28 @@
+---
+
+### Open Shift Collector
+
+- name: Run Sed command
+  shell: sed -i 's/ --log-driver=journald/ --log-driver=json-file --log-opt max-file=3/' /etc/sysconfig/docker
+
+- name: Restart docker
+  service: 
+    name: docker
+    state: restarted
+
+- name: oc login
+  shell: oc login -u system:admin
+
+- name: copy yml file
+  copy: src=collectorforopenshift.yml dest=/tmp/collectorforopenshift.yml mode==0644
+
+- name: oc apply
+  shell: oc apply -f /tmp/collectorforopenshift.yml
+
+- name: oc adm policy
+  shell: oc adm policy add-scc-to-user privileged system:serviceaccount:collectorforopenshift:collectorforopenshift
+
+- name: remove yml file
+  file:
+    path: /tmp/collectorforopenshift.yml
+    state: absent
